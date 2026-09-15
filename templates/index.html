@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Planetary Position Calculator</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 900px; margin: 2rem auto; padding: 0 1rem;
+    background: #f7f5f0; color: #222;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+  .subtitle { color: #666; margin-top: 0; margin-bottom: 1.5rem; font-size: 0.9rem; }
+  form {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem; background: #fff; padding: 1.2rem; border-radius: 10px;
+    border: 1px solid #ddd; margin-bottom: 1.5rem;
+  }
+  label { display: block; font-size: 0.78rem; color: #555; margin-bottom: 0.2rem; }
+  input, select {
+    width: 100%; padding: 0.45rem 0.5rem; border: 1px solid #ccc; border-radius: 6px;
+    font-size: 0.95rem; box-sizing: border-box;
+  }
+  .full-row { grid-column: 1 / -1; }
+  button {
+    grid-column: 1 / -1; padding: 0.6rem; border: none; border-radius: 6px;
+    background: #3d5a80; color: #fff; font-size: 1rem; cursor: pointer;
+  }
+  button:hover { background: #2f4763; }
+  .error {
+    background: #fdecea; border: 1px solid #f5b8b1; color: #922; padding: 0.8rem 1rem;
+    border-radius: 8px; margin-bottom: 1.2rem;
+  }
+  .meta { font-size: 0.85rem; color: #666; margin-bottom: 0.8rem; }
+  .meta code { background: #eee; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
+  th, td { padding: 0.55rem 0.7rem; text-align: left; font-size: 0.9rem; border-bottom: 1px solid #eee; }
+  th { background: #eef1f6; font-weight: 600; color: #333; }
+  tr:last-child td { border-bottom: none; }
+  .retro { color: #b5461f; font-weight: 600; }
+  .warn { color: #b5461f; font-size: 0.85rem; margin-bottom: 1rem; }
+  .downloads { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
+  .downloads-label { font-size: 0.82rem; color: #666; }
+  .inline-form { display: inline; }
+  button.secondary {
+    padding: 0.45rem 0.9rem; border: 1px solid #3d5a80; border-radius: 6px;
+    background: transparent; color: #3d5a80; font-size: 0.85rem; cursor: pointer;
+  }
+  button.secondary:hover { background: #3d5a80; color: #fff; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #16181d; color: #e5e5e5; }
+    form, table { background: #21242b; border-color: #333; }
+    th { background: #2a2e37; color: #ddd; }
+    td, th { border-color: #333; }
+    input, select { background: #16181d; color: #eee; border-color: #444; }
+    .subtitle, .meta, .downloads-label { color: #999; }
+    button.secondary { color: #7da2d1; border-color: #7da2d1; }
+    button.secondary:hover { background: #7da2d1; color: #16181d; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Planetary Position Calculator</h1>
+<p class="subtitle">Sidereal (Vedic) planet positions via Swiss Ephemeris — the same engine professional astrology software runs on.</p>
+<p class="nav"><a href="/">Planetary Positions</a> &nbsp;|&nbsp; <a href="/extended">Extended Chart (houses, dasha, vargas, panchang)</a></p>
+
+{% if error %}
+  <div class="error">{{ error }}</div>
+{% endif %}
+
+<form method="post">
+  <div>
+    <label>Birth date (dd/mm/yyyy)</label>
+    <input name="date" value="{{ values.date }}" placeholder="16/10/1990">
+  </div>
+  <div>
+    <label>Birth time (HH:mm, 24h)</label>
+    <input name="time" value="{{ values.time }}" placeholder="14:20">
+  </div>
+  <div>
+    <label>UTC offset (±HH:mm)</label>
+    <input name="offset" value="{{ values.offset }}" placeholder="+05:30">
+  </div>
+  <div>
+    <label>Ayanamsa</label>
+    <select name="ayanamsa">
+      {% for a in ayanamsa_options %}
+        <option value="{{ a }}" {% if values.ayanamsa == a %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="full-row">
+    <label>Location name</label>
+    <input name="location" value="{{ values.location }}" placeholder="Bangalore, India">
+  </div>
+  <div>
+    <label>Latitude (±, decimal)</label>
+    <input name="latitude" value="{{ values.latitude }}" placeholder="12.977">
+  </div>
+  <div>
+    <label>Longitude (±, decimal)</label>
+    <input name="longitude" value="{{ values.longitude }}" placeholder="77.575">
+  </div>
+  <div>
+    <label>Rahu/Ketu node</label>
+    <select name="node">
+      <option value="true" {% if values.node == "true" %}selected{% endif %}>True node</option>
+      <option value="false" {% if values.node == "false" %}selected{% endif %}>Mean node</option>
+    </select>
+  </div>
+
+  <button type="submit">Calculate</button>
+</form>
+
+{% if result %}
+  <div class="meta">
+    Ayanamsa: <code>{{ result.ayanamsa }}</code> = {{ "%.4f"|format(result.ayanamsa_value) }}&deg;
+    &nbsp;|&nbsp; Julian Day (UT): <code>{{ "%.5f"|format(result.julian_day_ut) }}</code>
+    &nbsp;|&nbsp; Location: {{ values.location }} ({{ values.latitude }}, {{ values.longitude }})
+  </div>
+
+  {% if result.used_fallback_moshier %}
+    <div class="warn">Note: date is outside the downloaded high-precision ephemeris file range (~1800–2399) — fell back to the built-in Moshier analytic model (still accurate to about 1 arcsecond).</div>
+  {% endif %}
+
+  <table>
+    <tr>
+      <th>Graha</th><th>Longitude</th><th>Rasi</th><th>Degree in Sign</th><th>Nakshatra</th><th>Pada</th><th>Motion</th>
+    </tr>
+    {% for name in planet_order %}
+      {% set p = result.planets[name] %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ "%.4f"|format(p.longitude) }}&deg;</td>
+        <td>{{ p.rasi }}</td>
+        <td>{{ p.dms }}</td>
+        <td>{{ p.nakshatra }}</td>
+        <td>{{ p.pada }}</td>
+        <td class="{% if p.retrograde and name not in ['Rahu', 'Ketu', 'Ascendant'] %}retro{% endif %}">
+          {% if name in ['Rahu', 'Ketu', 'Ascendant'] %}&mdash;{% elif p.retrograde %}Retrograde{% else %}Direct{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <div class="downloads">
+    <span class="downloads-label">Export for research / cross-checking:</span>
+    <form method="get" action="/export/json" class="inline-form">
+      {% for k, v in values.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="secondary">Download JSON</button>
+    </form>
+    <form method="get" action="/export/csv" class="inline-form">
+      {% for k, v in values.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="secondary">Download CSV</button>
+    </form>
+  </div>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Extended Vedic Chart</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1000px; margin: 2rem auto; padding: 0 1rem;
+    background: #f7f5f0; color: #222;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+  h2 { font-size: 1.05rem; margin: 1.8rem 0 0.6rem; }
+  .subtitle { color: #666; margin-top: 0; font-size: 0.9rem; }
+  .nav { margin-bottom: 1.2rem; font-size: 0.9rem; }
+  .nav a { color: #3d5a80; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  form {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem; background: #fff; padding: 1.2rem; border-radius: 10px;
+    border: 1px solid #ddd; margin-bottom: 1.5rem;
+  }
+  label { display: block; font-size: 0.78rem; color: #555; margin-bottom: 0.2rem; }
+  input, select {
+    width: 100%; padding: 0.45rem 0.5rem; border: 1px solid #ccc; border-radius: 6px;
+    font-size: 0.95rem; box-sizing: border-box;
+  }
+  .full-row { grid-column: 1 / -1; }
+  button {
+    grid-column: 1 / -1; padding: 0.6rem; border: none; border-radius: 6px;
+    background: #3d5a80; color: #fff; font-size: 1rem; cursor: pointer;
+  }
+  button:hover { background: #2f4763; }
+  .error {
+    background: #fdecea; border: 1px solid #f5b8b1; color: #922; padding: 0.8rem 1rem;
+    border-radius: 8px; margin-bottom: 1.2rem;
+  }
+  .note { font-size: 0.8rem; color: #888; margin: 0.3rem 0 0.8rem; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; margin-bottom: 0.5rem; }
+  th, td { padding: 0.5rem 0.65rem; text-align: left; font-size: 0.88rem; border-bottom: 1px solid #eee; }
+  th { background: #eef1f6; font-weight: 600; color: #333; }
+  tr:last-child td { border-bottom: none; }
+  details { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; }
+  summary { padding: 0.6rem 0.8rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+  summary .lord { color: #3d5a80; }
+  details table { border: none; border-radius: 0; border-top: 1px solid #eee; }
+  .panchang-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.7rem; }
+  .pill { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 0.6rem 0.8rem; }
+  .pill .label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .pill .value { font-size: 1.05rem; font-weight: 600; margin-top: 0.1rem; }
+  .downloads { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; }
+  .downloads-label { font-size: 0.82rem; color: #666; }
+  .inline-form { display: inline; }
+  button.secondary {
+    padding: 0.45rem 0.9rem; border: 1px solid #3d5a80; border-radius: 6px;
+    background: transparent; color: #3d5a80; font-size: 0.85rem; cursor: pointer;
+  }
+  button.secondary:hover { background: #3d5a80; color: #fff; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #16181d; color: #e5e5e5; }
+    form, table, details, .pill { background: #21242b; border-color: #333; }
+    th { background: #2a2e37; color: #ddd; }
+    td, th, details table { border-color: #333; }
+    input, select { background: #16181d; color: #eee; border-color: #444; }
+    .subtitle, .note, .pill .label, .downloads-label { color: #999; }
+    button.secondary { color: #7da2d1; border-color: #7da2d1; }
+    button.secondary:hover { background: #7da2d1; color: #16181d; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Extended Vedic Chart</h1>
+<p class="subtitle">Houses, Vimshottari dasha, divisional charts and panchang — all derived from the same Swiss Ephemeris positions.</p>
+<p class="nav"><a href="/">Planetary Positions</a> &nbsp;|&nbsp; <a href="/extended">Extended Chart</a></p>
+
+{% if error %}
+  <div class="error">{{ error }}</div>
+{% endif %}
+
+<form method="post">
+  <div>
+    <label>Birth date (dd/mm/yyyy)</label>
+    <input name="date" value="{{ values.date }}">
+  </div>
+  <div>
+    <label>Birth time (HH:mm, 24h)</label>
+    <input name="time" value="{{ values.time }}">
+  </div>
+  <div>
+    <label>UTC offset (±HH:mm)</label>
+    <input name="offset" value="{{ values.offset }}">
+  </div>
+  <div>
+    <label>Ayanamsa</label>
+    <select name="ayanamsa">
+      {% for a in ayanamsa_options %}
+        <option value="{{ a }}" {% if values.ayanamsa == a %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="full-row">
+    <label>Location name</label>
+    <input name="location" value="{{ values.location }}">
+  </div>
+  <div>
+    <label>Latitude</label>
+    <input name="latitude" value="{{ values.latitude }}">
+  </div>
+  <div>
+    <label>Longitude</label>
+    <input name="longitude" value="{{ values.longitude }}">
+  </div>
+  <div>
+    <label>Rahu/Ketu node</label>
+    <select name="node">
+      <option value="true" {% if values.node == "true" %}selected{% endif %}>True node</option>
+      <option value="false" {% if values.node == "false" %}selected{% endif %}>Mean node</option>
+    </select>
+  </div>
+  <button type="submit">Calculate</button>
+</form>
+
+{% if result %}
+
+  <h2>Ascendant</h2>
+  <p>{{ result.planets.Ascendant.rasi }} — {{ result.planets.Ascendant.dms }}, {{ result.planets.Ascendant.nakshatra }} pada {{ result.planets.Ascendant.pada }}</p>
+
+  <h2>Houses (whole-sign)</h2>
+  <table>
+    <tr><th>House</th><th>Sign</th><th>Lord</th><th>Planets Here</th></tr>
+    {% for house_num in range(1, 13) %}
+      {% set hs = house_data.house_signs[house_num] %}
+      <tr>
+        <td>{{ house_num }}</td>
+        <td>{{ hs.sign }}</td>
+        <td>{{ hs.lord }}</td>
+        <td>
+          {% for name in planet_order %}
+            {% if house_data.planet_houses[name].house == house_num %}{{ name }}&nbsp; {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Divisional Charts</h2>
+  <table>
+    <tr><th>Planet</th><th>D1 Rasi</th><th>D9 Navamsa</th><th>D10 Dasamsa</th></tr>
+    {% for name in planet_order %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ result.planets[name].rasi }}</td>
+        <td>{{ varga_data[name].D9_navamsa }}</td>
+        <td>{{ varga_data[name].D10_dasamsa }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Panchang (civil-day based)</h2>
+  <div class="panchang-grid">
+    <div class="pill"><div class="label">Tithi</div><div class="value">{{ panchang_data.tithi }}</div></div>
+    <div class="pill"><div class="label">Vara</div><div class="value">{{ panchang_data.vara }} ({{ panchang_data.vara_lord }})</div></div>
+    <div class="pill"><div class="label">Yoga</div><div class="value">{{ panchang_data.yoga }}</div></div>
+    <div class="pill"><div class="label">Karana</div><div class="value">{{ panchang_data.karana }}</div></div>
+    <div class="pill"><div class="label">Nakshatra</div><div class="value">{{ panchang_data.nakshatra }} p{{ panchang_data.pada }}</div></div>
+  </div>
+  <p class="note">{{ panchang_data.note }}</p>
+
+  <h2>Vimshottari Dasha</h2>
+  <p class="note">Birth nakshatra lord: {{ dasha_data.birth_nakshatra_lord }}. Balance-of-dasha method, 120-year cycle projected from birth.</p>
+  {% for md in dasha_data.mahadashas %}
+    <details>
+      <summary><span class="lord">{{ md.lord }}</span> mahadasha — {{ md.start }} to {{ md.end }} ({{ md.years }} yrs)</summary>
+      <table>
+        <tr><th>Antardasha</th><th>Start</th><th>End</th></tr>
+        {% for ad in md.antardashas %}
+          <tr><td>{{ ad.lord }}</td><td>{{ ad.start }}</td><td>{{ ad.end }}</td></tr>
+        {% endfor %}
+      </table>
+    </details>
+  {% endfor %}
+
+  <div class="downloads">
+    <span class="downloads-label">Export for research / cross-checking:</span>
+    <form method="get" action="/export/json" class="inline-form">
+      {% for k, v in values.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="secondary">Positions (JSON)</button>
+    </form>
+    <form method="get" action="/export/csv" class="inline-form">
+      {% for k, v in values.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="secondary">Positions (CSV)</button>
+    </form>
+    <form method="get" action="/export-extended/json" class="inline-form">
+      {% for k, v in values.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <button type="submit" class="secondary">Full Chart incl. Houses/Dasha (JSON)</button>
+    </form>
+  </div>
+
+{% endif %}
+
+</body>
+</html>
