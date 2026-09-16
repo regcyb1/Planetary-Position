@@ -68,10 +68,10 @@ def parse_float(text: str, label: str, lo: float, hi: float):
 DEFAULTS = {
     "date": "16/10/1990",
     "time": "14:20",
-    "offset": "+05:30",
-    "location": "Bangalore, India",
-    "latitude": "12.977",
-    "longitude": "77.575",
+    "offset": "+05:45",
+    "location": "Kathmandu, Nepal",
+    "latitude": "27.7172",
+    "longitude": "85.3240",
     "ayanamsa": "LAHIRI",
     "node": "true",
 }
